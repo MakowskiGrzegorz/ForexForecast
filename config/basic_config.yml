@@ -1,0 +1,30 @@
+# DATA
+data:
+  window_size: 10
+  overlap: True
+  threshold: 0.00072
+#MODEL
+model_technical:
+  name: "technical_basic"
+  input_dim: 9
+  hidden_dim: 50
+  layer_dim: 3
+  output_dim: 1
+  loss: 'mse'
+  optim: 'adam'
+  training:
+    learning_rate: 0.01
+    num_epochs: 500
+model_fundamental:
+  name: "fundamental_basic"
+  input_dim: 9
+  hidden_dim: 50
+  layer_dim: 3
+  output_dim: 1
+  loss: 'mse'
+  optim: 'adam'
+  training:
+    learning_rate: 0.01
+    num_epochs: 500
+
+
