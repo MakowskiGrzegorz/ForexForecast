@@ -13,7 +13,7 @@ model_technical:
   loss: 'combined'
   optim: 'adam'
   training:
-    learning_rate: 0.001
+    learning_rate: 0.0005
     num_epochs: 300
 model_fundamental:
   name: "fundamental_combined"
@@ -24,7 +24,7 @@ model_fundamental:
   loss: 'combined'
   optim: 'adam'
   training:
-    learning_rate: 0.001
+    learning_rate: 0.0005
     num_epochs: 300
 
 

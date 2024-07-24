@@ -6,6 +6,8 @@ from typing import Tuple
 import numpy as np
 from src.threshold import decision
 import logging
+
+__DEVICE__ = 'cuda' if torch.cuda.is_available() else 'cpu'
 class DirectionalMeanSquaredError(nn.Module):
     """
     Klasa implementująca niestandardową funkcję straty, która minimalizuje różnicę
@@ -87,8 +89,8 @@ class Model(nn.Module):
         Zwraca:
             Tuple[list, list]: Krotka zawierająca listy strat treningowych i walidacyjnych dla każdej epoki.
         """
-        inputs = torch.from_numpy(data_train[0]).float()
-        targets = torch.from_numpy(data_train[1]).float()
+        inputs = torch.from_numpy(data_train[0]).float().to(__DEVICE__)
+        targets = torch.from_numpy(data_train[1]).float().to(__DEVICE__)
         pbar = tqdm(range(self.epochs), desc="Training Progress")
         train_loss = []
         valid_loss = []
@@ -104,7 +106,7 @@ class Model(nn.Module):
             valid_loss.append(valid_loss_epoch)
             
             pbar.set_postfix({"Train Loss": loss.item(), "Valid Loss": valid_loss_epoch})
-            if epoch > 0 and epoch % 10 == 0:
+            if epoch > 0 and epoch % 50 == 0:
                 self.save_model(prefix=f"Epoch_{epoch}")
         return train_loss, valid_loss
         
@@ -113,7 +115,7 @@ class Model(nn.Module):
         Predicts next price.
         '''
         with torch.no_grad():
-            inputs = torch.from_numpy(data).float()
+            inputs = torch.from_numpy(data).float().to(__DEVICE__)
             outputs = self.lstm(inputs)
         return outputs
 
@@ -129,8 +131,8 @@ class Model(nn.Module):
         """
         self.lstm.eval()  # Set the model to evaluation mode
         with torch.no_grad():  # Disable gradient calculation
-            inputs = torch.from_numpy(valid_data[0]).float()
-            targets = torch.from_numpy(valid_data[1]).float()
+            inputs = torch.from_numpy(valid_data[0]).float().to(__DEVICE__)
+            targets = torch.from_numpy(valid_data[1]).float().to(__DEVICE__)
             outputs = self.lstm(inputs)
             loss = self.criterion(outputs, targets)
         self.lstm.train()  # Set the model back to training mode

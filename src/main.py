@@ -108,7 +108,7 @@ def get_combined_decision(technical_prediction, fundamental_prediction, threesho
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default='config/basic_config.yaml', help='Path to the config file.')
+    parser.add_argument('--config', type=str, default='config/big_combined_config.yml', help='Path to the config file.')
     parser.add_argument('--train', action='store_true', help='Train the model.')
     parser.add_argument('--test', action='store_true', help='Test the model.')
     parser.add_argument('--bot', action='store_true', help='Run the trading bot.')
@@ -137,55 +137,57 @@ def main_train(config):
 def main():
     args = parse_arguments()
     config = load_config(args.config)
-    #args.test = True
+    #args.train = True
     if args.train:
         main_train(config)
     
     if args.test:
         config = load_config(args.config)
         model_technical = Model(config["model_technical"])
-        model_technical.load_model("Epoch_150")
-        #model_fundamental = Model(config["model_fundamental"])
-        #model_fundamental.load_model()
+        model_technical.load_model("Epoch_500")
+        model_fundamental = Model(config["model_fundamental"])
+        model_fundamental.load_model()
 
         loader = DataLoader('data/EURUSD240_technical.csv', "data/fundamental_data.csv")
         _, technical_dataset_valid = loader.prepare_technical_data(window_size=config['data']['window_size'], overlap=config['data']['overlap'])
         _, fundamental_dataset_valid = loader.prepare_fundamental_data(window_size=config['data']['window_size'], overlap=config['data']['overlap'])
 
 
-        technical_prediction = model_technical.predict(technical_dataset_valid[0]).numpy()
-        #fundamental_prediction = model_fundamental.predict(fundamental_dataset_valid[0]).numpy()
+        technical_prediction = model_technical.predict(technical_dataset_valid[0]).cpu().numpy()
+        fundamental_prediction = model_fundamental.predict(fundamental_dataset_valid[0]).cpu().numpy()
 
         assert np.allclose(technical_dataset_valid[1],fundamental_dataset_valid[1]) # we want to make sure that close price are same for both datasets 
         evaluate_model("Technical", technical_prediction, technical_dataset_valid[1], config['data']['threshold'])
-        #evaluate_model("Fundamental", fundamental_prediction, fundamental_dataset_valid[1], config['data']['threshold'])
+        print("============================================================================================")
+        evaluate_model("Fundamental", fundamental_prediction, fundamental_dataset_valid[1], config['data']['threshold'])
+        print("============================================================================================")
 
+        combined_decision = get_combined_decision(technical_prediction, fundamental_prediction, config['data']['threshold'])
+        target_diff = np.diff(fundamental_dataset_valid[1], axis=0)
+        target_decision = np.apply_along_axis(lambda x: int(decision(x, config['data']['threshold']).value), 1, target_diff)
 
-        # combined_decision = get_combined_decision(technical_prediction, fundamental_prediction, config['data']['threshold'])
-        # target_diff = np.diff(fundamental_dataset_valid[1], axis=0)
-        # target_decision = np.apply_along_axis(lambda x: int(decision(x, config['data']['threshold']).value), 1, target_diff)
-
-        # print("Combined AUC: ", calculate_auc(target_decision, combined_decision))
-        # print("Combined F1-score:", calculate_f1_score(*count_classification_results(combined_decision, target_decision)))
+        print("Combined AUC: ", calculate_auc(target_decision, combined_decision))
+        print("Combined F1-score:", calculate_f1_score(*count_classification_results(combined_decision, target_decision)))
+        print("============================================================================================")
         #evaluate_model("Combined", combined_decision, technical_dataset_valid[1], config['data']['threshold'])
 
 
     if args.bot:
         config = load_config(args.config)
         model_technical = Model(config["model_technical"])
-        model_technical.load_model("Epoch_100")
-        #model_fundamental = Model(config["model_fundamental"])
-        #model_fundamental.load_model()
+        model_technical.load_model("Epoch_150")
+        model_fundamental = Model(config["model_fundamental"])
+        model_fundamental.load_model("Epoch_150")
 
         loader = DataLoader('data/EURUSD240_technical.csv', "data/fundamental_data.csv")
-        technical_dataset_train, technical_dataset_valid = loader.prepare_technical_data(window_size=config['data']['window_size'], overlap=config['data']['overlap'])
-        fundamental_dataset_train, fundamental_dataset_valid = loader.prepare_fundamental_data(window_size=config['data']['window_size'], overlap=config['data']['overlap'])
+        _, technical_dataset_valid = loader.prepare_technical_data(window_size=config['data']['window_size'], overlap=config['data']['overlap'])
+        _, fundamental_dataset_valid = loader.prepare_fundamental_data(window_size=config['data']['window_size'], overlap=config['data']['overlap'])
 
         #steps  = technical_dataset_train[0].shape[0]
         technical_profit, technical_profit_trade, technical_loss_trade, technical_num_trades = test_trading_bot(technical_dataset_valid[0], model_technical, loader.technical_scaler)
         logging.info(f"TECHNICAL MODEL \tProfit: {technical_profit} \tNum trades: {technical_num_trades} \tProfit trades: {technical_profit_trade} \tLoss trades: {technical_loss_trade}")
-        #fundamental_profit, fundamental_num_trades = test_trading_bot(fundamental_dataset_valid[0], model_fundamental, loader.fundamental_scaler)
-        #logging.info(f"FUNDAMENTAL MODEL \tProfit: {fundamental_profit} \tNum trades: {fundamental_num_trades}")
+        fundamental_profit, fundamental_profit_trade, fundamental_loss_trade, fundamental_num_trades = test_trading_bot(fundamental_dataset_valid[0], model_fundamental, loader.fundamental_scaler)
+        logging.info(f"FUNDAMENTAL MODEL \tProfit: {fundamental_profit} \tNum trades: {fundamental_num_trades} \tProfit trades: {fundamental_profit_trade} \tLoss trades: {fundamental_loss_trade}")
 
 
         
