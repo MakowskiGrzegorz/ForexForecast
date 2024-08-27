@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.preprocessing import label_binarize
-from sklearn.metrics import roc_auc_score
-from threshold import decision
+from sklearn.metrics import roc_auc_score, r2_score
+from src.threshold import decision
 
 def calculate_rmse(predictions: np.ndarray, targets: np.ndarray) -> float:
     """
@@ -33,7 +33,8 @@ def calculate_smape(predictions: np.ndarray, targets: np.ndarray) -> float:
 
 
 
-
+def calculate_r2(predictions: np.ndarray, targets:np.ndarray) ->float:
+    return r2_score(targets, predictions)
 
 def count_classification_results(predictions: np.ndarray, targets: np.ndarray) -> (int, int, int):
     """
@@ -98,13 +99,18 @@ def calculate_auc(predictions: np.ndarray, targets: np.ndarray) -> float:
 
 def evaluate_model(model_name:str, predictions:np.ndarray, targets:np.ndarray, threeshold_val:float):
     print(f"Model: {model_name}")
-    print(f"RMSE: {calculate_rmse(predictions, targets)}")
-    print(f"sMAPE: {calculate_smape(predictions, targets)}")
-
+    print(f"RMSE: {round(calculate_rmse(predictions, targets),4)}")
+    print(f"sMAPE: {round(calculate_smape(predictions, targets),4)}")
+    print(f"R2: {round(calculate_r2(predictions, targets),4)}")
 
     predict_diff = np.diff(predictions, axis=0)
     target_diff = np.diff(targets, axis=0)
+    if len(predict_diff.shape) == 1:
+        predict_diff = np.expand_dims(predict_diff, 1)
+        target_diff = np.expand_dims(target_diff, 1)
     predict_decision = np.apply_along_axis(lambda x: int(decision(x, threeshold_val).value), 1, predict_diff)
     target_decision = np.apply_along_axis(lambda x: int(decision(x, threeshold_val).value), 1, target_diff)
-    print(f"AUC: {calculate_auc(target_decision, predict_decision)}")
-    print(f"F1-score: {calculate_f1_score(*count_classification_results(predict_decision, target_decision))}")
+    print(f"AUC: {round(calculate_auc(predict_decision, target_decision),4)}")
+    print(f"F1-score: {round(calculate_f1_score(*count_classification_results(predict_decision, target_decision)),4)}")
+
+    print( f"& {round(calculate_rmse(predictions, targets),4)} & {round(calculate_smape(predictions, targets),4)} & {round(calculate_r2(predictions, targets),4)} & {round(calculate_auc(predict_decision, target_decision),4)} & {round(calculate_f1_score(*count_classification_results(predict_decision, target_decision)),4)}")

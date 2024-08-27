@@ -116,4 +116,93 @@ def decision(diff: float, threshold: float) -> Decision:
         return Decision.DEC
     else:
         return Decision.NOACT
+def calculate_3_month_thresholds(loader):
+    # Extract 'date' and 'close' columns
+    close_with_date = loader.technical_data[['date', 'close']].copy()
 
+    # Ensure that the 'date' column is a datetime type
+    close_with_date['date'] = pd.to_datetime(close_with_date['date'])
+
+    # Set the 'date' column as the index
+    close_with_date.set_index('date', inplace=True)
+
+    # Resample data into 3-month periods and forward-fill the values
+    df_3_monthly = close_with_date.resample('3M').apply(lambda x: get_threshold(x['close']))
+
+    # Dictionary to hold the 3-month thresholds
+    three_month_thresholds = {}
+    previous_threshold = 0
+    
+    for period, threshold in df_3_monthly.items():
+        # Store the previous threshold value
+        three_month_thresholds[period] = previous_threshold
+        print(f"3-Month threshold value for {period}: {previous_threshold}")
+        previous_threshold = threshold
+
+    return three_month_thresholds
+
+def calculate_monthly_thresholds(loader):
+    # Extract 'date' and 'close' columns
+    close_with_date = loader.technical_data[['date', 'close']].copy()
+
+    # Ensure that the 'date' column is a datetime type
+    close_with_date['date'] = pd.to_datetime(close_with_date['date'])
+
+    # Group the data by year and month
+    grouped = close_with_date.groupby(close_with_date['date'].dt.to_period('M'))
+
+    # Dictionary to hold the monthly thresholds
+    monthly_thresholds = {}
+    previous_threeshold = 0
+    for period, df in grouped:
+        # Calculate the threshold value for the entire month
+        monthly_threshold_value = get_threshold(df['close'])
+        monthly_thresholds[period] = previous_threeshold
+        print(f"Monthly threshold value for {period}: {previous_threeshold}")
+        previous_threeshold = monthly_threshold_value
+
+    return monthly_thresholds
+def save_thresholds_to_csv(monthly_thresholds, output_file):
+    # Create a time range with 4-hour intervals covering all months
+    start_date = min([period.start_time for period in monthly_thresholds.keys()])
+    end_date = max([period.end_time for period in monthly_thresholds.keys()]) + pd.DateOffset(months=1)
+    time_range = pd.date_range(start=start_date, end=end_date, freq='4H')
+
+    # Create a DataFrame to hold the interpolated threshold values
+    interpolated_df = pd.DataFrame({'4h_period': time_range})
+
+    # Map each 4-hour period to the corresponding monthly threshold value
+    def map_threshold(period):
+        month = period.to_period('M')
+        return monthly_thresholds.get(month, None)
+
+    interpolated_df['monthly_threshold_value'] = interpolated_df['4h_period'].apply(lambda x: map_threshold(x))
+
+    # Save the DataFrame to a CSV file
+    interpolated_df.to_csv(output_file, index=False)
+    print(f"4-hour interval thresholds saved to {output_file}")
+def load_and_resample_csv(input_file, output_file):
+    # Load the CSV file
+    df = pd.read_csv(input_file)
+
+    # Convert the 'date' column to datetime format
+    df['date'] = pd.to_datetime(df['date'])
+
+    # Set the 'date' column as the index
+    df.set_index('date', inplace=True)
+
+    # Sort the DataFrame by index (date)
+    df.sort_index(inplace=True)
+
+    # Resample the data to 4-hour intervals, using forward-fill to fill missing values
+    df_resampled = df.resample('4H').ffill()
+
+    # Save the resampled DataFrame to a new CSV file
+    df_resampled.to_csv(output_file)
+    print(f"4-hour interval data saved to {output_file}")
+if __name__ == "__main__":
+    from src.dataloader import DataLoader
+    load_and_resample_csv('data/3_months.csv', 'data/resampled_output.csv')
+    # loader = DataLoader('data/EURUSD240_technical.csv', "data/fundamental_data.csv")
+    # monthly_thresholds = calculate_3_month_thresholds(loader)
+    # save_thresholds_to_csv(monthly_thresholds, output_file="data/1_month_thresholds.csv")

@@ -1,30 +1,30 @@
 # DATA
 data:
   window_size: 10
-  overlap: True
+  overlap: False
   threshold: 0.00072
 #MODEL
 model_technical:
-  name: "technical_test"
+  name: "technical_madl"
   input_dim: 9
-  hidden_dim: 50
+  hidden_dim: 512
   layer_dim: 3
   output_dim: 1
-  loss: 'mse'
+  loss: 'madl'
   optim: 'adam'
   training:
-    learning_rate: 0.01
+    learning_rate: 0.1
     num_epochs: 500
 model_fundamental:
-  name: "fundamental_test"
+  name: "fundamental_madl"
   input_dim: 9
   hidden_dim: 50
   layer_dim: 3
   output_dim: 1
-  loss: 'mse'
+  loss: 'madl'
   optim: 'adam'
   training:
-    learning_rate: 0.01
+    learning_rate: 2.15
     num_epochs: 500
 
 

@@ -93,11 +93,11 @@ def main():
     data = calculate_RSI(data, 10)
     data = calculate_bolinger_bands(data, 20, 2)
     data = calculate_cci(data, 20, 100)
-    
     data.to_csv("data/EURUSD240_technical.csv")
 
+    data['close'] = data['close'].diff().round(8).dropna()
+    data.to_csv("data/EURUSD240_technical_diff.csv")
 
-    
 
 if __name__ == "__main__":
     main()

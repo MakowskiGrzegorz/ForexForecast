@@ -107,6 +107,8 @@ def prepare_fundamental_data(dataframes: Dict[str, pd.DataFrame], start, end) ->
         fundamental[name] = df.iloc[:,0]
 
     fundamental.to_csv("data/fundamental_data.csv")
+    fundamental['close'] = fundamental['close'].diff().round(8).dropna()
+    fundamental.to_csv("data/fundamental_data_diff.csv")
 
 def main():
 

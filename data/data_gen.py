@@ -35,3 +35,5 @@ def generate_indexes(output_file, start_date, end_date):
 if __name__ == "__main__":
     generate_prices('data/prices.csv', '2021-01-01 00:00:00', '2021-05-30 23:00:00')
     generate_indexes('data/indexes.csv', '2021-01-01 00:00:00', '2021-05-31 23:00:00')
+
+    
