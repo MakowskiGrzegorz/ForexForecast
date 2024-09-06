@@ -1,50 +1,45 @@
 # DATA
 data:
-  window_size: 20
+  window_size: 30
+  future_steps: 6
   overlap: True
   threshold: 0.00072
 #MODEL
 model_technical:
   name: "technical_basic"
-  data:
-    window_size: 20
   input_dim: 9
-  hidden_dim: 64
-  layer_dim: 2
+  hidden_dim: 2048
+  layer_dim: 5
   output_dim: 1
   dropout: 0.2
-  loss: 'mse' #0.0017405542312189937
+  loss: 'mse'
   optim: 'adam'
   training:
-    learning_rate: 0.01
-    num_epochs: 300
+    learning_rate: 0.000005
+    num_epochs: 400
 
 model_fundamental:
   name: "fundamental_basic"
-  data:
-    window_size: 20
   input_dim: 9
-  hidden_dim: 64
-  layer_dim: 3
+  hidden_dim: 256
+  layer_dim: 2
   output_dim: 1
   dropout: 0.2
-  loss: 'mse' #0.0038452690932899714
+  loss: 'mse'
   optim: 'adam'
   training:
-    learning_rate: 0.01
+    learning_rate: 0.0005
     num_epochs: 300
 
 model_combined:
   name: "combined_basic"
-  data:
-    window_size: 20
   input_dim: 17
-  hidden_dim: 150
-  layer_dim: 3
+  hidden_dim: 512
+  layer_dim: 2
   output_dim: 1
   dropout: 0.2
-  loss: 'mse' #0.0017405542312189937
+  loss: 'mse'
   optim: 'adam'
   training:
-    learning_rate: 0.01
+    learning_rate: 0.0005
     num_epochs: 300

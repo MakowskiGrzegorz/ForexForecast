@@ -1,48 +1,43 @@
 # DATA
 data:
   window_size: 20
+  future_steps: 6
   overlap: True
   threshold: 0.00072
 #MODEL
 model_technical:
   name: "technical_directional"
-  data:
-    window_size: 20
   input_dim: 9
-  hidden_dim: 64
+  hidden_dim: 256
+  layer_dim: 2
+  output_dim: 1
+  dropout: 0.2
+  loss: 'directional'
+  optim: 'adam'
+  training:
+    learning_rate: 0.0005
+    num_epochs: 300
+model_fundamental:
+  name: "fundamental_directional"
+  input_dim: 9
+  hidden_dim: 256
   layer_dim: 2
   output_dim: 1
   loss: 'directional'
   optim: 'adam'
   dropout: 0.2
   training:
-    learning_rate: 0.01
-    num_epochs: 300
-model_fundamental:
-  name: "fundamental_directional"
-  data:
-    window_size: 20
-  input_dim: 9
-  hidden_dim: 64
-  layer_dim: 3
-  output_dim: 1
-  loss: 'directional'
-  optim: 'adam'
-  dropout: 0.2
-  training:
-    learning_rate: 0.01
+    learning_rate: 0.0005
     num_epochs: 300
 model_combined:
   name: "combined_directional"
-  data:
-    window_size: 20
   input_dim: 17
-  hidden_dim: 150
-  layer_dim: 3
+  hidden_dim: 512
+  layer_dim: 2
   output_dim: 1
   loss: 'directional'
   optim: 'adam'
   dropout: 0.2
   training:
-    learning_rate: 0.01
+    learning_rate: 0.0005
     num_epochs: 300
