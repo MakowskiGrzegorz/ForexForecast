@@ -8,8 +8,8 @@ data:
 model_technical:
   name: "technical_basic"
   input_dim: 9
-  hidden_dim: 2048
-  layer_dim: 5
+  hidden_dim: 256
+  layer_dim: 2
   output_dim: 1
   dropout: 0.2
   loss: 'mse'
